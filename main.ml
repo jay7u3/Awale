@@ -1,6 +1,24 @@
 let width = 6
 let height = 2
-let nb_seeds = 4
+let length = width*height
+let nbSeeds = 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 (* The awale game state includes the board and the scores of both players *)
 type awale = int array * int ref * int ref
@@ -12,108 +30,50 @@ type player =
 
 (* Initialize the awale game *)
 let init_awale () : awale =
-  let board = Array.make (width * height) nb_seeds in
+  let board = Array.make length nbSeeds in
   let score1 = ref 0 in
   let score2 = ref 0 in
   (board, score1, score2)
 
-(* Convert an index to a player *)
-let index_to_player (index: int) : player =
-  if index mod (width * height) < width then Player1 else Player2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(* Get the player who own the square i *)
+let index_to_player (i:int) = if i < width then Player1 else Player2
 
 (* Get the other player *)
 let other_player (p: player) : player =
   match p with
-  | Player1 -> Player2
-  | Player2 -> Player1
-
-(* Print the player *)
-let print_player player =
-  match player with
-  | Player1 -> print_string "Joueur 1"
-  | Player2 -> print_string "Joueur 2"
-
-(* Print the awale game state *)
-let print_awale ((board, score1, score2): awale) : unit =
-  (* Codes de couleur ANSI *)
-  let reset = "\x1b[0m" in
-  let red = "\x1b[31m" in
-  let yellow = "\x1b[33m" in
-  let blue = "\x1b[34m" in
-  let cyan = "\x1b[36m" in
-
-  (* Affichage du plateau *)
-  print_string (cyan ^ "\n==================================\n" ^ reset);
-  print_string (blue ^ "           Awale Game             \n" ^ reset);
-  print_string (cyan ^ "==================================\n" ^ reset);
-  print_string (red ^ "Score Joueur 1: " ^ reset); print_int !score1; print_string "\n";
-  print_string (yellow ^ "Score Joueur 2: " ^ reset); print_int !score2; print_string "\n";
-  print_string (cyan ^ "----------------------------------\n" ^ reset);
-  for i = 0 to width-1 do
-    print_string ("  ");
-    print_int i;
-    print_string (" ")
-  done;
-  print_string (" \n");
-  print_string (cyan ^ "----------------------------------\n" ^ reset);
-  for i = 0 to height-1 do
-    for j = 0 to width-1 do
-      print_string (blue ^ "| " ^ reset);
-      print_int board.(i * width + j);
-      print_string (blue ^ " " ^ reset)
-    done;
-    print_string (blue ^ "|\n" ^ reset);
-    print_string (cyan ^ "----------------------------------\n" ^ reset);
-  print_string (cyan ^ "----------------------------------\n" ^ reset);
-  done;
-  for i = width to 2*width-1 do
-    print_string ("  ");
-    print_int i;
-    print_string (" ")
-  done;
-  print_string (" \n");
-  print_string (cyan ^ "==================================\n")
-
+  |Player1 -> Player2
+  |Player2 -> Player1
 
 (* Get the next position in the awale board *)
-let suivant (index: int) : int =
-  if index = 11 then 5 
-  else if index = 0 then 6 
-  else if index > 5 then index + 1 
-  else if index < 6 then index - 1 
-  else -1
+let suivant (index: int) : int = (index + 1) mod length
 
 (* Get the previous position in the awale board *)
-let precedent (index: int) : int =
-  if index = 5 then 11 
-  else if index = 6 then 0 
-  else if index > 6 then index - 1 
-  else if index < 5 then index + 1 
-  else -1
+let precedent (index: int) : int = (index - 1 + length) mod length
 
-(* Donne le numéro de la case actuelle après s'être déplacé de n graines *)
-let rec avancer (board: int array) (start: int) (graine: int) : int =
-  if graine = 0 then start
-  else avancer board (suivant start) (graine - 1)
-
-(* Check if a move is legitimate *)
-let legit_moov ((board, _, _): awale) (start: int) (current_player: player) : bool =
-  let offset = 
-    match current_player with
-    | Player1 -> 0
-    | Player2 -> 6
-  in
-    match board.(start) with
-    | 0 -> false
-    | _ ->
-      let survivant = ref false in
-      let voisin_mange = ref false in
-      for i = (if offset = 0 then 0 else 11) to (if offset = 0 then 5 else 6) do
-        if (((start = offset + i) || !voisin_mange) && (board.(offset + i) = 1 || board.(offset + i) = 2))
-          then voisin_mange := true
-        else (voisin_mange := false ; if board.(offset + i) <> 0 then survivant := true)
-      done;
-      ((offset <= start && start < (offset + 6)) && (((avancer board start board.(start)) - offset < 6) || !survivant))
+(* Give index of the last seed *)
+let advance (start: int) (seed: int) : int = (start mod length) + (start / length)
 
 (* Take seeds from the board *)
 let take ((board, score1, score2): awale) (start: int) (last: int) : unit =
@@ -147,6 +107,41 @@ let play_moov ((board, score1, score2): awale) (start: int) : unit =
   done;
   take (board, score1, score2) start (precedent !i);
   ()
+
+(* Check if a move is legitimate *)
+let legit_moov ((board, _, _): awale) (start: int) (current_player: player) : bool =
+  let offset = if current_player = Player1 then width else 0 in
+  match board.(start) with
+  | 0 -> false
+  | _ ->
+    let board_copy = Array.copy board in
+    play_moov (board_copy, ref 0, ref 0) start;
+    let valid = ref false in
+    for i = offset to offset + width - 1 do
+      if board_copy.(i) <> 0 then valid := true
+    done;
+    !valid
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 (*
@@ -199,13 +194,13 @@ let heuristic (coef: int array) ((board, score1, score2): awale) (p: player) : i
                     coef.(5) * !rangeMin in
   final_score
 
-(*
--naif coef: {1, -1, 0, 0, 0, 0}
--smart coef:{2, -2, 1, -1, 0, 0}
--gigasmart coef:{5, -5, 3, -3, 2, -2}
--offensive coef:{5, -4, 3, -2, 2, -1}
--deffensive coef:{4, -5, 2, -3, 1, -2}
-*)
+
+
+
+
+
+
+
 
 (* Minimax algorithm to evaluate the best move *)
 let rec minmax_alpha_beta ((board, score1, score2):awale) (current_player: player) (max_player: player) (depth: int) (alpha: int) (beta: int) (evaluation: awale->player->int) : int =
@@ -266,94 +261,3 @@ let minmax_aux_alpha_beta ((board, score1, score2):awale) (current_player: playe
         best_move := i;
         end;)
   done; !best_move
-
-
-
-let play1vs1 () : unit =
-  let board, score1, score2 = init_awale () in
-  let current_player = ref Player1 in
-  while true do
-    print_awale (board, score1, score2);
-    print_string "\n";
-    print_player !current_player;
-    print_string "'s turn. Enter your move: ";
-    let move = read_int () in
-    print_string "\n";
-  
-    if legit_moov (board, score1, score2) move !current_player then begin
-      play_moov (board, score1, score2) move;
-      current_player := other_player !current_player
-    end else
-      print_string "Invalid move. Try again.\n";
-  done
-
-let play1vsBot (player_start:bool) (depth:int) (heuristic: awale->player->int) : unit =
-  let board, score1, score2 = init_awale () in
-  let current_player = if player_start then ref Player1 else ref Player2 in
-  while true do
-    print_awale (board, score1, score2);
-    print_string "\n";
-    print_string "heuristic score: "; print_int (heuristic (board, score1, score2) Player1);
-    print_string "\n";
-    print_player !current_player;
-    print_string "'s turn. Enter your move: ";
-
-    let move = ref 0 in
-    if !current_player = Player1 then (
-      move := read_int ()
-    )
-    else (
-      move := minmax_aux_alpha_beta (board, score1, score2) Player2 depth heuristic;
-      print_int !move);
-    
-    print_string "\n";
-    if legit_moov (board, score1, score2) !move !current_player then begin
-      play_moov (board, score1, score2) !move;
-      current_player := other_player !current_player
-    end else
-      print_string "Invalid move. Try again.\n";
-  done
-
-let playBotVsBot (depth: int) (heuristic1: awale -> player -> int) (heuristic2: awale -> player -> int) : unit =
-  let board, score1, score2 = init_awale () in
-  let current_player = ref Player1 in
-  while true do
-    print_awale (board, score1, score2);
-    print_string "\n";
-    print_string "Heuristic score: "; 
-    if !current_player = Player1 then
-      print_int (heuristic1 (board, score1, score2) !current_player)
-    else
-      print_int (heuristic2 (board, score1, score2) !current_player);
-    print_string "\n";
-    
-    print_player !current_player; 
-    print_string "'s turn.\n";
-    
-    let move = ref (-1) in
-    if !current_player = Player1 then
-      move := minmax_aux_alpha_beta (board, score1, score2) !current_player depth heuristic1
-    else
-      move := minmax_aux_alpha_beta (board, score1, score2) !current_player depth heuristic2;
-    
-    print_int !move; 
-    print_string "\n";
-    
-    if legit_moov (board, score1, score2) !move !current_player then begin
-      play_moov (board, score1, score2) !move;
-      current_player := other_player !current_player
-    end else
-      print_string "Invalid move. Something went wrong.\n";
-  done
-
-
-
-(*coef = [|nbSeedsMax; nbSeedsMin; sensibleMax; sensibleMin; rangeMax; rangeMin|]*)
-let test_coef = [|0; 0; 0; 0; 0; 0|]
-let naif_coef = [|1; -1; 0; 0; 0; 0|]
-let smart_coef = [|5; -5; -1; 1; 0; 0|]
-let gigasmart_coef = [|10; -10; -2; 2; 2; -2|]
-
-(*let () = play1vs1 ()*)
-let () = play1vsBot true 12 (heuristic gigasmart_coef)
-(*let () = playBotVsBot 8 (heuristic smart_coef) (heuristic naif_coef)*)
