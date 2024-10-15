@@ -80,7 +80,7 @@ let take ((board, score1, score2): awale) (start: int) (last: int) : unit =
   let i = ref last in
   let taking = ref true in
   let p = index_to_player start in
-  while ((!i <> (precedent start)) && !taking && ((index_to_player !i) <> (index_to_player start))) do
+  while ((!i <> precedent start) && !taking && ((index_to_player !i) <> (index_to_player start))) do
     if (board.(!i) <> 2 && board.(!i) <> 3) then (
       taking := false
     )
@@ -100,9 +100,9 @@ let play_moov ((board, score1, score2): awale) (start: int) : unit =
   let hand = ref board.(start) in
   board.(start) <- 0;
   while !hand <> 0 do
-    if !i <> start then
+    if !i <> start then (
       board.(!i) <- board.(!i) + 1;
-      hand := !hand - 1;
+      hand := !hand - 1);
     i := suivant !i;
   done;
   take (board, score1, score2) start (precedent !i);
