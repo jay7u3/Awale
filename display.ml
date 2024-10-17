@@ -67,13 +67,11 @@ let play1vs1 () : unit =
       print_string "Invalid move. Try again.\n";
   done
 
-let play1vsBot (player_start:bool) (depth:int) (heuristic: awale->player->int) : unit =
+let play1vsBot (player_start:bool) (depth:int) (heuristic: awale->player->int->int) : unit =
   let board, score1, score2 = init_awale () in
   let current_player = if player_start then ref Player1 else ref Player2 in
   while true do
     print_awale (board, score1, score2);
-    print_string "\n";
-    print_string "heuristic score: "; print_int (heuristic (board, score1, score2) Player1);
     print_string "\n";
     print_player !current_player;
     print_string "'s turn. Enter your move: ";
@@ -94,17 +92,12 @@ let play1vsBot (player_start:bool) (depth:int) (heuristic: awale->player->int) :
       print_string "Invalid move. Try again.\n";
   done
 
-let playBotVsBot (depth: int) (heuristic1: awale -> player -> int) (heuristic2: awale -> player -> int) : unit =
+
+let playBotVsBot (depth: int) (heuristic1: awale -> player -> int->int) (heuristic2: awale -> player -> int->int) : unit =
   let board, score1, score2 = init_awale () in
   let current_player = ref Player1 in
   while true do
     print_awale (board, score1, score2);
-    print_string "\n";
-    print_string "Heuristic score: "; 
-    if !current_player = Player1 then
-      print_int (heuristic1 (board, score1, score2) !current_player)
-    else
-      print_int (heuristic2 (board, score1, score2) !current_player);
     print_string "\n";
     
     print_player !current_player; 
@@ -129,11 +122,12 @@ let playBotVsBot (depth: int) (heuristic1: awale -> player -> int) (heuristic2: 
 
 
 (*coef = [|nbSeedsMax; nbSeedsMin; sensibleMax; sensibleMin; rangeMax; rangeMin|]*)
-let test_coef = [|0; 0; 0; 0; 0; 0|]
-let naif_coef = [|1; -1; 0; 0; 0; 0|]
-let smart_coef = [|5; -5; -1; 1; 0; 0|]
-let gigasmart_coef = [|10; -10; -2; 2; 2; -2|]
+let naif = [|1; -1; 0; 0; 0; 0|]
+let smart = [|5; -5; -1; 1; 0; 0|]
+let gigasmart = [|10; -10; -2; 2; 2; -2|]
+let gigasmart2 = [|20; -20; -7; 7; 5; -5|]
 
 (*let () = play1vs1 ()*)
-let () = play1vsBot true 12 (heuristic gigasmart_coef)
+let () = play1vsBot true 12 (heuristic gigasmart2)
+(*let () = playBotVsBot 8 (heuristic gigasmart) (heuristic naif)*)
 (*let () = playBotVsBot 8 (heuristic smart_coef) (heuristic naif_coef)*)

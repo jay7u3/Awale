@@ -25,7 +25,7 @@ let zobrist_hash (board: int array) (current_player: player) : int =
   done;
   !hash
 
-let add_move (hash_table:(int, int) Hashtbl.t) (key:int) (move:int) : unit =
-  Hashtbl.add hash_table key move
+let add_move (key:int) (move:int) : unit =
+  Hashtbl.add moovSaved key move
 
-let get_move hash_table key = Hashtbl.find hash_table key
+let get_move (key:int) = Hashtbl.find_opt moovSaved key

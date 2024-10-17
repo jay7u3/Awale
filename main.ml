@@ -1,3 +1,5 @@
+open TranspositionTable
+
 let width = 6
 let height = 2
 let length = width*height
@@ -55,7 +57,7 @@ let init_awale () : awale =
 
 
 
-
+let tt_player (p:player) = if p = Player1 then TranspositionTable.Player1 else TranspositionTable.Player2
 
 (* Get the player who own the square i *)
 let index_to_player (i:int) = if i < width then Player1 else Player2
@@ -144,15 +146,8 @@ let legit_moov ((board, _, _): awale) (start: int) (current_player: player) : bo
 
 
 
-(*
-? point par case sensible adverse
--? point par case sensible
-? points par graines gagnés
--? points par graines gagnés par l'adversaire.
-? points par case adverse dans notre range
--? point par cases dans la range de l'adversaire.
-*)
-let heuristic (coef: int array) ((board, score1, score2): awale) (p: player) : int =
+
+let heuristic (coef: int array) ((board, score1, score2): awale) (p: player) (hash:int): int =
   let seedsMax = if p = Player1 then !score1 else !score2 in
   let seedsMin = if p = Player1 then !score2 else !score1 in
   
@@ -192,6 +187,8 @@ let heuristic (coef: int array) ((board, score1, score2): awale) (p: player) : i
                     coef.(3) * !sensibleMin + 
                     coef.(4) * !rangeMax + 
                     coef.(5) * !rangeMin in
+  
+  TranspositionTable.add_move hash final_score;
   final_score
 
 
@@ -203,9 +200,14 @@ let heuristic (coef: int array) ((board, score1, score2): awale) (p: player) : i
 
 
 (* Minimax algorithm to evaluate the best move *)
-let rec minmax_alpha_beta ((board, score1, score2):awale) (current_player: player) (max_player: player) (depth: int) (alpha: int) (beta: int) (evaluation: awale->player->int) : int =
+let rec minmax_alpha_beta ((board, score1, score2):awale) (current_player: player) (max_player: player) (depth: int) (alpha: int) (beta: int) (evaluation: awale->player->int->int) : int =
+  (* Manage Transposition Tabple *)
+  let hash = TranspositionTable.zobrist_hash board (tt_player current_player) in
+  match TranspositionTable.get_move hash with
+  |Some moov -> moov
+  |None ->
   if depth = 0 then
-    evaluation (board, score1, score2) current_player
+    evaluation (board, score1, score2) current_player hash
   else
     let alpha = ref alpha in
     let beta = ref beta in
@@ -241,7 +243,7 @@ let rec minmax_alpha_beta ((board, score1, score2):awale) (current_player: playe
 
 
 (* Auxiliary function to get the best move using Minimax *)
-let minmax_aux_alpha_beta ((board, score1, score2):awale) (current_player: player) (depth: int) (heuristic: awale->player->int) : int =
+let minmax_aux_alpha_beta ((board, score1, score2):awale) (current_player: player) (depth: int) (heuristic: awale->player->int->int) : int =
   let best_move = ref (-1) in
   let best_score = ref (-1000) in
   let alpha = ref (-1000) in
